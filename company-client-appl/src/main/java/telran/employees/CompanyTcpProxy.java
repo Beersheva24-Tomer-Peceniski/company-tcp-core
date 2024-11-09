@@ -1,13 +1,41 @@
 package telran.employees;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import telran.net.TcpClient;
 
 public class CompanyTcpProxy implements Company {
     TcpClient tcpClient;
+
+    private class CompanyIterator implements Iterator<Employee> {
+        Iterator<Employee> iterator;
+        Employee lastIterated;
+
+        public CompanyIterator(Employee[] employeeArray) {
+            iterator = Arrays.asList(employeeArray).iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public Employee next() {
+            lastIterated = iterator.next();
+            return lastIterated;
+        }
+
+        @Override
+        public void remove() {
+            iterator.remove();
+            removeEmployee(lastIterated.getId());
+        }
+    }
 
     public CompanyTcpProxy(TcpClient tcpClient) {
         this.tcpClient = tcpClient;
@@ -15,7 +43,14 @@ public class CompanyTcpProxy implements Company {
 
     @Override
     public Iterator<Employee> iterator() {
-        throw new UnsupportedOperationException("Unimplemented method 'iterator'");
+        String jsonStr = tcpClient.sendAndReceive("iterator", "");
+        JSONArray jsonArray = new JSONArray(jsonStr);
+        Employee[] employeeArray = new Employee[jsonArray.length()];
+        for (int i = 0; i < jsonArray.length(); i++) {
+            Employee emp = Employee.getEmployeeFromJSON(jsonArray.getString(i));
+            employeeArray[i] = emp;
+        }
+        return new CompanyIterator(employeeArray);
     }
 
     @Override
@@ -25,8 +60,7 @@ public class CompanyTcpProxy implements Company {
 
     @Override
     public int getDepartmentBudget(String arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getDepartmentBudget'");
+        return Integer.parseInt(tcpClient.sendAndReceive("getDepartmentBudget", arg0));
     }
 
     @Override
@@ -39,20 +73,37 @@ public class CompanyTcpProxy implements Company {
 
     @Override
     public Employee getEmployee(long arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getEmployee'");
+        String jsonStr = tcpClient.sendAndReceive("getEmployee", String.valueOf(arg0));
+        Employee emp = Employee.getEmployeeFromJSON(jsonStr);
+        return emp;
     }
 
     @Override
     public Manager[] getManagersWithMostFactor() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getManagersWithMostFactor'");
+        String jsonStr = tcpClient.sendAndReceive("getManagersWithMostFactor", "");
+        JSONArray jsonArray = new JSONArray(jsonStr);
+        Manager[] res = getManagersFromJSONArray(jsonArray);
+        return res;
+    }
+
+    private Manager[] getManagersFromJSONArray(JSONArray jsonArray) {
+        Manager[] res = new Manager[jsonArray.length()];
+        for (int i = 0; i < jsonArray.length(); i++) {
+            String managerString = jsonArray.getString(i);
+            Employee emp = Employee.getEmployeeFromJSON(managerString);
+            Manager manager = new Manager();
+            if (emp instanceof Manager) {
+                manager = (Manager) emp;
+            }
+            res[i] = manager;
+        }
+        return res;
     }
 
     @Override
     public Employee removeEmployee(long arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeEmployee'");
+        String responseJSON = tcpClient.sendAndReceive("removeEmployee", String.valueOf(arg0));
+        return Employee.getEmployeeFromJSON(responseJSON);
     }
 
 }
