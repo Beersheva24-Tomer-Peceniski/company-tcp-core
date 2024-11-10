@@ -1,41 +1,13 @@
 package telran.employees;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import telran.net.TcpClient;
 
 public class CompanyTcpProxy implements Company {
     TcpClient tcpClient;
-
-    private class CompanyIterator implements Iterator<Employee> {
-        Iterator<Employee> iterator;
-        Employee lastIterated;
-
-        public CompanyIterator(Employee[] employeeArray) {
-            iterator = Arrays.asList(employeeArray).iterator();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        @Override
-        public Employee next() {
-            lastIterated = iterator.next();
-            return lastIterated;
-        }
-
-        @Override
-        public void remove() {
-            iterator.remove();
-            removeEmployee(lastIterated.getId());
-        }
-    }
 
     public CompanyTcpProxy(TcpClient tcpClient) {
         this.tcpClient = tcpClient;
@@ -43,14 +15,7 @@ public class CompanyTcpProxy implements Company {
 
     @Override
     public Iterator<Employee> iterator() {
-        String jsonStr = tcpClient.sendAndReceive("iterator", "");
-        JSONArray jsonArray = new JSONArray(jsonStr);
-        Employee[] employeeArray = new Employee[jsonArray.length()];
-        for (int i = 0; i < jsonArray.length(); i++) {
-            Employee emp = Employee.getEmployeeFromJSON(jsonArray.getString(i));
-            employeeArray[i] = emp;
-        }
-        return new CompanyIterator(employeeArray);
+        throw new UnsupportedOperationException();
     }
 
     @Override
