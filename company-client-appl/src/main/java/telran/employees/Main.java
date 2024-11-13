@@ -23,14 +23,14 @@ public class Main {
     }
 
     private static Item[] addExitItem(Item[] items, TcpClient tcpClient) {
-        Item[] res = Arrays.copyOf(items, items.length + 1);
-        res[items.length] = Item.of("Exit", io -> {
-            try {
-                tcpClient.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }, true);
-        return res;
+       Item[] res = Arrays.copyOf(items, items.length + 1);
+       res[items.length] = Item.of("Exit", io -> {
+        try {
+            tcpClient.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }, true);
+    return res;
     }
 }

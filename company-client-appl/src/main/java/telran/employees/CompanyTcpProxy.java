@@ -15,7 +15,7 @@ public class CompanyTcpProxy implements Company {
 
     @Override
     public Iterator<Employee> iterator() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Unimplemented method 'iterator'");
     }
 
     @Override
@@ -24,8 +24,9 @@ public class CompanyTcpProxy implements Company {
     }
 
     @Override
-    public int getDepartmentBudget(String arg0) {
-        return Integer.parseInt(tcpClient.sendAndReceive("getDepartmentBudget", arg0));
+    public int getDepartmentBudget(String department) {
+        String responseData = tcpClient.sendAndReceive("getDepartmentBudget", department);
+        return Integer.parseInt(responseData);
     }
 
     @Override
@@ -37,38 +38,23 @@ public class CompanyTcpProxy implements Company {
     }
 
     @Override
-    public Employee getEmployee(long arg0) {
-        String jsonStr = tcpClient.sendAndReceive("getEmployee", String.valueOf(arg0));
-        Employee emp = Employee.getEmployeeFromJSON(jsonStr);
-        return emp;
+    public Employee getEmployee(long id) {
+        String responseData = tcpClient.sendAndReceive("getEmployee", id + "");
+        return Employee.getEmployeeFromJSON(responseData);
     }
 
     @Override
     public Manager[] getManagersWithMostFactor() {
-        String jsonStr = tcpClient.sendAndReceive("getManagersWithMostFactor", "");
-        JSONArray jsonArray = new JSONArray(jsonStr);
-        Manager[] res = getManagersFromJSONArray(jsonArray);
-        return res;
-    }
-
-    private Manager[] getManagersFromJSONArray(JSONArray jsonArray) {
-        Manager[] res = new Manager[jsonArray.length()];
-        for (int i = 0; i < jsonArray.length(); i++) {
-            String managerString = jsonArray.getString(i);
-            Employee emp = Employee.getEmployeeFromJSON(managerString);
-            Manager manager = new Manager();
-            if (emp instanceof Manager) {
-                manager = (Manager) emp;
-            }
-            res[i] = manager;
-        }
+        String responseData = tcpClient.sendAndReceive("getManagersWithMostFactor", "");
+        Manager[] res = new JSONArray(responseData).toList().stream().map(Object::toString)
+                .map(Employee::getEmployeeFromJSON).toArray(Manager[]::new);
         return res;
     }
 
     @Override
-    public Employee removeEmployee(long arg0) {
-        String responseJSON = tcpClient.sendAndReceive("removeEmployee", String.valueOf(arg0));
-        return Employee.getEmployeeFromJSON(responseJSON);
+    public Employee removeEmployee(long id) {
+        String responseData = tcpClient.sendAndReceive("removeEmployee", "" + id);
+        return Employee.getEmployeeFromJSON(responseData);
     }
 
 }

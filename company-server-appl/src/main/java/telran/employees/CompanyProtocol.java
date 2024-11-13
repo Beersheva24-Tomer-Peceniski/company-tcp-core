@@ -1,5 +1,6 @@
 package telran.employees;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.json.JSONArray;
@@ -7,7 +8,6 @@ import org.json.JSONArray;
 import telran.net.*;
 
 public class CompanyProtocol implements Protocol {
-
     CompanyImpl company;
 
     public CompanyProtocol() {
@@ -16,23 +16,36 @@ public class CompanyProtocol implements Protocol {
 
     @Override
     public Response getResponse(Request request) {
-        String type = request.requestType();
-        String data = request.requestData();
+        String methodName = request.requestType();
+        String methodArgument = request.requestData();
         Response response = null;
-        try {
-            response = switch (type) {
-                case "addEmployee" -> addEmployee(data);
-                case "getDepartmentBudget" -> getDepartmentBudget(data);
-                case "getDepartments" -> getDepartments();
-                case "getEmployee" -> getEmployee(data);
-                case "getManagersWithMostFactor" -> getManagersWithMostFactor();
-                case "removeEmployee" -> removeEmployee(data);
-                default -> new Response(ResponseCode.WRONG_TYPE, type + " is wrong type");
-            };
-        } catch (Exception e) {
-            response = new Response(ResponseCode.WRONG_DATA, e.getMessage());
+        Method[] methodsArray = CompanyProtocol.class.getDeclaredMethods();
+        Method method = methodSearch(methodsArray, methodName);
+        if (method == null) {
+            response = new Response(ResponseCode.WRONG_TYPE, methodName + ": Wrong type");
+        } else {
+            try {
+                int numArguments = method.getParameterCount();
+                response = switch (numArguments) {
+                    case 0 -> (Response) method.invoke(this);
+                    case 1 -> (Response) method.invoke(this, methodArgument);
+                    default -> new Response(ResponseCode.WRONG_TYPE, methodName + ": Wrong type");
+                };
+            } catch (Exception e) {
+                response = new Response(ResponseCode.WRONG_DATA, e.getMessage());
+            }
         }
         return response;
+    }
+
+    private Method methodSearch(Method[] methodsArray, String methodName) {
+        Method res = null;
+        for (Method method : methodsArray) {
+            if (method.getName().equals(methodName)) {
+                res = method;
+            }
+        }
+        return res;
     }
 
     Response addEmployee(String data) {
@@ -47,7 +60,7 @@ public class CompanyProtocol implements Protocol {
     }
 
     Response getDepartments() {
-        String [] departmentsArray = company.getDepartments();
+        String[] departmentsArray = company.getDepartments();
         JSONArray jsonArray = new JSONArray(departmentsArray);
         return new Response(ResponseCode.OK, jsonArray.toString());
     }
@@ -59,7 +72,7 @@ public class CompanyProtocol implements Protocol {
     }
 
     Response getManagersWithMostFactor() {
-        Manager [] managersArray = company.getManagersWithMostFactor();
+        Manager[] managersArray = company.getManagersWithMostFactor();
         JSONArray jsonArray = new JSONArray();
         if (managersArray.length > 0) {
             Arrays.stream(managersArray).forEach(m -> jsonArray.put(m.toString()));
