@@ -9,7 +9,7 @@ import java.util.Arrays;
 import telran.net.*;
 
 public class Main {
-    private static final String HOST = "localhost";
+    private static final String HOST = "34.228.155.150";
     private static final int PORT = 4000;
 
     public static void main(String[] args) {
@@ -24,15 +24,15 @@ public class Main {
     }
 
     private static Item[] addExitItem(Item[] items, NetworkClient netClient) {
-        Item[] res = Arrays.copyOf(items, items.length + 1);
-        res[items.length] = Item.of("Exit", io -> {
-            try {
-                if (netClient instanceof Closeable closeable)
-                    closeable.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }, true);
-        return res;
+       Item[] res = Arrays.copyOf(items, items.length + 1);
+       res[items.length] = Item.of("Exit", io -> {
+        try {
+            if(netClient instanceof Closeable closeable)
+            closeable.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }, true);
+    return res;
     }
 }
